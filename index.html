@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#0f1117"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>ARWA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+
+<!-- Mobile sidebar overlay -->
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+
+<div class="root">
+
+  <!-- ══════════ SIDEBAR ══════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sb-top">
+      <div class="sb-brand">
+        <div class="sb-brand-av">A</div>
+        <span class="sb-brand-name">ARWA</span>
+      </div>
+      <!-- Mobile close arrow -->
+      <button class="sb-close-btn" onclick="closeSidebar()" aria-label="Close sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+
+    <button class="sb-new-chat" onclick="switchView('chat'); newChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Chat
+    </button>
+
+    <div class="sb-scroll">
+
+      <div class="sb-group-label">Navigate</div>
+      <button class="sb-item active" id="nav-chat" onclick="switchView('chat')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span>Chat</span>
+      </button>
+      <button class="sb-item" id="nav-diary" onclick="switchView('diary')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        <span>Our Diary</span>
+      </button>
+
+      <div class="sb-group-label" style="margin-top:18px">
+        Projects
+        <button class="sb-add-btn" onclick="openNewProjectModal()" title="New project">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div id="projectsList"></div>
+
+      <div class="sb-group-label" style="margin-top:18px">Recent</div>
+      <div id="historyList"></div>
+
+    </div>
+
+    <div class="sb-bottom">
+      <button class="sb-item" id="nav-settings" onclick="switchView('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <div class="main">
+
+    <!-- HEADER -->
+    <header class="topbar" id="topbar">
+      <button class="icon-btn" id="menuBtn" onclick="openSidebar()" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <!-- Back button — shown in sub-views on mobile -->
+      <button class="icon-btn back-btn" id="backBtn" onclick="goBack()" style="display:none" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="topbar-av">A</div>
+      <div class="topbar-info">
+        <div class="topbar-name" id="topbarName">ARWA</div>
+        <div class="topbar-sub" id="topbarSub">AI Companion</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="status-pill">
+          <span class="sdot"></span>
+          <span>Online</span>
+        </div>
+        <div class="mood-ind" id="moodInd"></div>
+        <button class="icon-btn" id="voiceBtn" onclick="openVoiceModeWithPermission()" title="Voice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="icon-btn danger" id="clearBtn" onclick="clearChat()" title="Clear">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── CHAT VIEW ── -->
+    <div id="chatView" class="view active">
+      <div id="msgs">
+        <div class="welcome" id="wlc">
+          <div class="welcome-logo">
+            <img src="arwa.png" class="welcome-img" onerror="this.style.display='none';document.getElementById('welcomeLetterFallback').style.display='flex'"/>
+            <div class="welcome-letter" id="welcomeLetterFallback">A</div>
+          </div>
+          <h1 class="welcome-name">Arwa</h1>
+          <p class="welcome-sub">Your personal AI companion</p>
+          <p class="welcome-credit">by Rehan, made with love ♡</p>
+          <div class="welcome-chips">
+            <button class="chip" onclick="sq('Tell me something beautiful')">Tell me something beautiful ✨</button>
+            <button class="chip" onclick="sq('Write me a short poem')">Write me a poem 📝</button>
+            <button class="chip" onclick="sq('What should I do today?')">What to do today?</button>
+            <button class="chip" onclick="sq('Make me smile 😊')">Make me smile 😊</button>
+            <button class="chip" onclick="sq('Motivate me')">Motivate me 🔥</button>
+          </div>
+        </div>
+      </div>
+      <div class="inp-bar" id="inpBar">
+        <div class="inp-inner">
+          <div class="attach-strip" id="attachStrip"></div>
+          <div class="inp-box">
+            <button class="inp-icon-btn" onclick="document.getElementById('fileInput').click()" title="Attach">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <button class="inp-icon-btn inp-voice-btn" id="inpVoiceBtn" onclick="openVoiceModeWithPermission()" title="Voice chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+            <input type="file" id="fileInput" accept="image/*,.pdf,.txt,.doc,.docx,.csv" multiple onchange="handleFiles(this.files)" style="display:none"/>
+            <textarea id="ui" placeholder="Message Arwa..." rows="1" onkeydown="hk(event)" oninput="onInput(this)"></textarea>
+            <button id="stopBtn" class="inp-icon-btn stop-btn" onclick="stopGen()" style="display:none" title="Stop">
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            </button>
+            <button id="sb" class="send-btn" onclick="send()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="inp-footer">
+            <span class="inp-hint">Enter to send · Shift+Enter new line</span>
+            <div class="inp-footer-right">
+              <span class="char-ct" id="charCount"></span>
+              <select class="model-pick" id="modelSel">
+                <option value="llama-3.3-70b-versatile">llama-3.3-70b</option>
+                <option value="llama-3.1-8b-instant">llama-3.1-8b</option>
+                <option value="mixtral-8x7b-32768">mixtral-8x7b</option>
+                <option value="gemma2-9b-it">gemma2-9b</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DIARY VIEW ── -->
+    <div id="diaryView" class="view">
+      <div class="page-container">
+        <div class="page-header">
+          <div class="page-header-left">
+            <div class="page-icon">♡</div>
+            <div>
+              <div class="page-title" id="diaryPageTitle">Our Diary</div>
+              <div class="page-sub">Rehan &amp; Arwa · private memories</div>
+            </div>
+          </div>
+          <button class="pill-btn" onclick="openDiaryEditor()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Entry
+          </button>
+        </div>
+        <div id="diaryEntries">
+          <div class="empty-state" id="diaryEmpty">
+            <div class="empty-icon">📖</div>
+            <div class="empty-text">Your first memory is waiting to be written</div>
+            <button class="pill-btn" style="margin-top:16px" onclick="openDiaryEditor()">Write First Entry</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS VIEW ── -->
+    <div id="settingsView" class="view">
+      <div class="page-container">
+        <div class="page-header">
+          <div class="page-header-left">
+            <div class="page-icon">⚙</div>
+            <div>
+              <div class="page-title">Settings</div>
+              <div class="page-sub">Customize your ARWA experience</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings cards grid -->
+        <div class="settings-grid" id="settingsGrid">
+
+          <div class="settings-card" onclick="openSettingsPanel('mood')">
+            <div class="sc-icon">😊</div>
+            <div class="sc-info">
+              <div class="sc-title">Arwa's Mood</div>
+              <div class="sc-sub" id="scMoodSub">Normal</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+          <div class="settings-card" onclick="openSettingsPanel('personality')">
+            <div class="sc-icon">✨</div>
+            <div class="sc-info">
+              <div class="sc-title">Personality</div>
+              <div class="sc-sub" id="scPersonalitySub">Hinglish · Balanced</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+          <div class="settings-card" onclick="openSettingsPanel('behavior')">
+            <div class="sc-icon">🧠</div>
+            <div class="sc-info">
+              <div class="sc-title">Custom Behavior</div>
+              <div class="sc-sub" id="scBehaviorSub">Default</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+          <div class="settings-card" onclick="openSettingsPanel('voice')">
+            <div class="sc-icon">🎙</div>
+            <div class="sc-info">
+              <div class="sc-title">Voice</div>
+              <div class="sc-sub" id="scVoiceSub">Auto-speak off</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+          <div class="settings-card" onclick="openSettingsPanel('appearance')">
+            <div class="sc-icon">🎨</div>
+            <div class="sc-info">
+              <div class="sc-title">Appearance</div>
+              <div class="sc-sub" id="scAppearanceSub">Dark · Medium</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+          <div class="settings-card" onclick="openSettingsPanel('history')">
+            <div class="sc-icon">💬</div>
+            <div class="sc-info">
+              <div class="sc-title">Chat History</div>
+              <div class="sc-sub" id="scHistorySub">Manage &amp; export</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+          <div class="settings-card" onclick="openSettingsPanel('diary')">
+            <div class="sc-icon">📖</div>
+            <div class="sc-info">
+              <div class="sc-title">Diary Settings</div>
+              <div class="sc-sub" id="scDiarySub">Our Diary · Thoughtful</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+          <div class="settings-card" onclick="openSettingsPanel('about')">
+            <div class="sc-icon">♡</div>
+            <div class="sc-info">
+              <div class="sc-title">About</div>
+              <div class="sc-sub">ARWA v2.0 by Rehan</div>
+            </div>
+            <div class="sc-arrow">›</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS PANEL (sub-view) ── -->
+    <div id="settingsPanelView" class="view">
+      <div class="page-container" id="settingsPanelContent"></div>
+    </div>
+
+  </div><!-- end .main -->
+</div><!-- end .root -->
+
+<button class="scroll-btn" id="scrollBtn" onclick="scrollToBottom()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+</button>
+
+<!-- VOICE OVERLAY -->
+<div class="voice-overlay" id="voiceOverlay">
+  <div class="voice-box">
+    <div class="voice-av-wrap">
+      <div class="vring r1"></div><div class="vring r2"></div><div class="vring r3"></div>
+      <div class="voice-av">A</div>
+    </div>
+    <div class="voice-status" id="voiceStatus">Tap to speak</div>
+    <div class="voice-transcript" id="voiceTranscript"></div>
+    <div class="voice-ctrls">
+      <button class="voice-ctrl" onclick="closeVoiceMode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <button class="voice-mic" id="voiceMicBtn" onclick="toggleVoiceListening()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <button class="voice-ctrl" id="voiceStopSpeakBtn" onclick="stopSpeaking()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      </button>
+    </div>
+    <div class="voice-hint" id="voiceHint">Press mic to start talking</div>
+  </div>
+</div>
+
+<!-- DIARY EDITOR MODAL -->
+<div class="modal-overlay" id="diaryModal" style="display:none">
+  <div class="modal diary-modal">
+    <div class="modal-topbar">
+      <span class="modal-date" id="diaryModalDate"></span>
+      <button class="icon-btn sm" onclick="closeDiaryEditor()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <input class="diary-title-inp" id="diaryTitleInp" placeholder="Give this memory a title..." maxlength="60"/>
+    <div class="mood-row">
+      <span class="field-label">Mood</span>
+      <div class="mood-opts">
+        <span class="mood-opt sel" onclick="selectMood(this)" data-mood="happy">😊</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="love">🥰</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="peaceful">😌</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="sad">🥺</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="excited">🤩</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="grateful">🙏</span>
+      </div>
+    </div>
+    <textarea class="diary-body-inp" id="diaryContentInp" placeholder="What happened today? Write freely..."></textarea>
+    <div class="diary-imgs-strip" id="diaryImgStrip"></div>
+    <div class="modal-actions">
+      <button class="ghost-btn" onclick="document.getElementById('diaryFileInput').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Photo
+      </button>
+      <input type="file" id="diaryFileInput" accept="image/*" multiple onchange="handleDiaryImages(this.files)" style="display:none"/>
+      <button class="ghost-btn" onclick="askArwaAboutEntry()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Ask Arwa
+      </button>
+      <button class="primary-btn" onclick="saveDiaryEntry()" style="margin-left:auto">Save Memory</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="modal-overlay" id="newProjectModal" style="display:none">
+  <div class="modal">
+    <div class="modal-topbar">
+      <span style="font-size:14px;font-weight:500;color:var(--text)">New Project</span>
+      <button class="icon-btn sm" onclick="closeNewProjectModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p style="font-size:12.5px;color:var(--text-mut);margin-bottom:18px">Organize your chats into separate projects.</p>
+    <div class="field-group">
+      <label class="field-label">Name</label>
+      <input class="field-input" id="newProjectName" placeholder="e.g. Work, Study, Ideas..." maxlength="30"/>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Icon</label>
+      <div class="emoji-grid" id="emojiPicker">
+        <span class="emoji-opt sel" onclick="selectEmoji(this)">📁</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">💼</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">🎯</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">💡</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">🔬</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">🎨</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">📚</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">🚀</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">❤️</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">⭐</span>
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="primary-btn" onclick="createProject()">Create Project</button>
+      <button class="ghost-btn" onclick="closeNewProjectModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
