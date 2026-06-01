@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <meta name="theme-color" content="#0f1117"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -119,7 +119,7 @@
           <span>Online</span>
         </div>
         <div class="mood-ind" id="moodInd"></div>
-        <button class="icon-btn" id="voiceBtn" onclick="openVoiceMode()" title="Voice">
+        <button class="icon-btn" id="voiceBtn" onclick="openVoiceModeWithPermission()" title="Voice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </button>
         <button class="icon-btn danger" id="clearBtn" onclick="clearChat()" title="Clear">
@@ -138,13 +138,13 @@
           </div>
           <h1 class="welcome-name">Arwa</h1>
           <p class="welcome-sub">Your personal AI companion</p>
-          <p class="welcome-credit">by Rehan, made with love ♡</p>
+          <p class="welcome-credit">by Rehan</p>
           <div class="welcome-chips">
-            <button class="chip" onclick="sq('Tell me something beautiful')">Tell me something beautiful ✨</button>
-            <button class="chip" onclick="sq('Write me a short poem')">Write me a poem 📝</button>
+            <button class="chip" onclick="sq('Tell me something beautiful')">Tell me something beautiful</button>
+            <button class="chip" onclick="sq('Write me a short poem')">Write me a poem</button>
             <button class="chip" onclick="sq('What should I do today?')">What to do today?</button>
-            <button class="chip" onclick="sq('Make me smile 😊')">Make me smile 😊</button>
-            <button class="chip" onclick="sq('Motivate me')">Motivate me 🔥</button>
+            <button class="chip" onclick="sq('Make me smile')">Make me smile</button>
+            <button class="chip" onclick="sq('Motivate me')">Motivate me</button>
           </div>
         </div>
       </div>
@@ -154,19 +154,19 @@
           <!-- Attach popup menu -->
           <div class="attach-popup" id="attachPopup">
             <button class="attach-opt" onclick="triggerFileInput('image/*');closeAttachPopup()">
-              <span class="attach-opt-icon">🖼️</span>
+              <span class="attach-opt-icon">IMG</span>
               <span>Photos</span>
             </button>
             <button class="attach-opt" onclick="triggerFileInput('video/*');closeAttachPopup()">
-              <span class="attach-opt-icon">🎬</span>
+              <span class="attach-opt-icon">VID</span>
               <span>Videos</span>
             </button>
             <button class="attach-opt" onclick="triggerFileInput('.pdf,.doc,.docx,.txt,.csv,.pptx,.xlsx');closeAttachPopup()">
-              <span class="attach-opt-icon">📄</span>
+              <span class="attach-opt-icon">DOC</span>
               <span>Files & Documents</span>
             </button>
             <button class="attach-opt" onclick="triggerCamera();closeAttachPopup()">
-              <span class="attach-opt-icon">📷</span>
+              <span class="attach-opt-icon">CAM</span>
               <span>Camera</span>
             </button>
           </div>
@@ -215,7 +215,7 @@
       <div class="page-container">
         <div class="page-header">
           <div class="page-header-left">
-            <div class="page-icon">♡</div>
+            <div class="page-icon">DY</div>
             <div>
               <div class="page-title" id="diaryPageTitle">Our Diary</div>
               <div class="page-sub">Rehan &amp; Arwa · private memories</div>
@@ -228,7 +228,7 @@
         </div>
         <div id="diaryEntries">
           <div class="empty-state" id="diaryEmpty">
-            <div class="empty-icon">📖</div>
+            <div class="empty-icon">DIARY</div>
             <div class="empty-text">Your first memory is waiting to be written</div>
             <button class="pill-btn" style="margin-top:16px" onclick="openDiaryEditor()">Write First Entry</button>
           </div>
@@ -241,7 +241,7 @@
       <div class="page-container">
         <div class="page-header">
           <div class="page-header-left">
-            <div class="page-icon">⚙</div>
+            <div class="page-icon">ST</div>
             <div>
               <div class="page-title">Settings</div>
               <div class="page-sub">Customize your ARWA experience</div>
@@ -253,7 +253,7 @@
         <div class="settings-grid" id="settingsGrid">
 
           <div class="settings-card" onclick="openSettingsPanel('mood')">
-            <div class="sc-icon">😊</div>
+            <div class="sc-icon">MD</div>
             <div class="sc-info">
               <div class="sc-title">Arwa's Mood</div>
               <div class="sc-sub" id="scMoodSub">Normal</div>
@@ -262,7 +262,7 @@
           </div>
 
           <div class="settings-card" onclick="openSettingsPanel('personality')">
-            <div class="sc-icon">✨</div>
+            <div class="sc-icon">PS</div>
             <div class="sc-info">
               <div class="sc-title">Personality</div>
               <div class="sc-sub" id="scPersonalitySub">Hinglish · Balanced</div>
@@ -271,7 +271,7 @@
           </div>
 
           <div class="settings-card" onclick="openSettingsPanel('behavior')">
-            <div class="sc-icon">🧠</div>
+            <div class="sc-icon">CB</div>
             <div class="sc-info">
               <div class="sc-title">Custom Behavior</div>
               <div class="sc-sub" id="scBehaviorSub">Default</div>
@@ -280,7 +280,7 @@
           </div>
 
           <div class="settings-card" onclick="openSettingsPanel('voice')">
-            <div class="sc-icon">🎙</div>
+            <div class="sc-icon">VO</div>
             <div class="sc-info">
               <div class="sc-title">Voice</div>
               <div class="sc-sub" id="scVoiceSub">Auto-speak off</div>
@@ -289,7 +289,7 @@
           </div>
 
           <div class="settings-card" onclick="openSettingsPanel('appearance')">
-            <div class="sc-icon">🎨</div>
+            <div class="sc-icon">AP</div>
             <div class="sc-info">
               <div class="sc-title">Appearance</div>
               <div class="sc-sub" id="scAppearanceSub">Dark · Medium</div>
@@ -298,7 +298,7 @@
           </div>
 
           <div class="settings-card" onclick="openSettingsPanel('history')">
-            <div class="sc-icon">💬</div>
+            <div class="sc-icon">CH</div>
             <div class="sc-info">
               <div class="sc-title">Chat History</div>
               <div class="sc-sub" id="scHistorySub">Manage &amp; export</div>
@@ -307,7 +307,7 @@
           </div>
 
           <div class="settings-card" onclick="openSettingsPanel('diary')">
-            <div class="sc-icon">📖</div>
+            <div class="sc-icon">DY</div>
             <div class="sc-info">
               <div class="sc-title">Diary Settings</div>
               <div class="sc-sub" id="scDiarySub">Our Diary · Thoughtful</div>
@@ -316,7 +316,7 @@
           </div>
 
           <div class="settings-card" onclick="openSettingsPanel('about')">
-            <div class="sc-icon">♡</div>
+            <div class="sc-icon">AB</div>
             <div class="sc-info">
               <div class="sc-title">About</div>
               <div class="sc-sub">ARWA v2.0 by Rehan</div>
@@ -377,12 +377,12 @@
     <div class="mood-row">
       <span class="field-label">Mood</span>
       <div class="mood-opts">
-        <span class="mood-opt sel" onclick="selectMood(this)" data-mood="happy">😊</span>
-        <span class="mood-opt" onclick="selectMood(this)" data-mood="love">🥰</span>
-        <span class="mood-opt" onclick="selectMood(this)" data-mood="peaceful">😌</span>
-        <span class="mood-opt" onclick="selectMood(this)" data-mood="sad">🥺</span>
-        <span class="mood-opt" onclick="selectMood(this)" data-mood="excited">🤩</span>
-        <span class="mood-opt" onclick="selectMood(this)" data-mood="grateful">🙏</span>
+        <span class="mood-opt sel" onclick="selectMood(this)" data-mood="happy">Happy</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="love">Warm</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="peaceful">Calm</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="sad">Low</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="excited">High</span>
+        <span class="mood-opt" onclick="selectMood(this)" data-mood="grateful">Grateful</span>
       </div>
     </div>
     <textarea class="diary-body-inp" id="diaryContentInp" placeholder="What happened today? Write freely..."></textarea>
@@ -419,16 +419,16 @@
     <div class="field-group">
       <label class="field-label">Icon</label>
       <div class="emoji-grid" id="emojiPicker">
-        <span class="emoji-opt sel" onclick="selectEmoji(this)">📁</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">💼</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">🎯</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">💡</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">🔬</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">🎨</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">📚</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">🚀</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">❤️</span>
-        <span class="emoji-opt" onclick="selectEmoji(this)">⭐</span>
+        <span class="emoji-opt sel" onclick="selectEmoji(this)">GEN</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">WRK</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">GOAL</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">IDEA</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">LAB</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">ART</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">STDY</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">DEV</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">PER</span>
+        <span class="emoji-opt" onclick="selectEmoji(this)">VIP</span>
       </div>
     </div>
     <div class="modal-actions" style="margin-top:20px">
