@@ -10,16 +10,16 @@ let ELEVEN_VOICE = 'moss_audio_22ac0b92-5d4c-11f1-adb2-f26303c3c234';
 
 // ── STATE ────────────────────────────────────────────────────
 let hist = [], busy = false, abortCtrl = null, attachments = [];
-let currentProjectId = 'general', activeChatId = null, selectedEmoji = '📁', selectedMood = 'happy';
+let currentProjectId = 'general', activeChatId = null, selectedEmoji = 'GEN', selectedMood = 'happy';
 let diaryEntries = [], diaryImages = [], editingEntryId = null;
 let currentView = 'chat', prevView = 'chat';
 let sidebarVisible = false;
 
 let projects = [
-  { id:'general',  name:'General',  emoji:'🏠', chats:[] },
-  { id:'work',     name:'Work',     emoji:'💼', chats:[] },
-  { id:'personal', name:'Personal', emoji:'❤️', chats:[] },
-  { id:'code',     name:'Code',     emoji:'🚀', chats:[] },
+  { id:'general',  name:'General',  emoji:'GEN', chats:[] },
+  { id:'work',     name:'Work',     emoji:'WRK', chats:[] },
+  { id:'personal', name:'Personal', emoji:'PER', chats:[] },
+  { id:'code',     name:'Code',     emoji:'DEV', chats:[] },
 ];
 const DEFAULT_IDS = new Set(['general','work','personal','code']);
 
@@ -32,7 +32,7 @@ const DEFAULTS = {
 };
 let S = {...DEFAULTS};
 
-const MOOD_EMOJI = { normal:'😊', romantic:'🥰', playful:'😄', caring:'🤗', serious:'🧠', poetic:'✨' };
+const MOOD_EMOJI = { normal:'', romantic:'ROM', playful:'FUN', caring:'CARE', serious:'FOCUS', poetic:'POET' };
 const MOOD_PROMPTS = {
   normal:'', romantic:'Abhi tumhara mood romantic hai — warmth aur pyaar dikhao.',
   playful:'Abhi playful mood hai — fun, light, witty raho.',
@@ -43,7 +43,7 @@ const MOOD_PROMPTS = {
 const TONE_PROMPTS = {
   hinglish:'Hinglish mein baat karo — Hindi aur English mix, casual aur warm.',
   romantic:'Romantic aur caring tone — jaise close partner bolta hai.',
-  friendly:'Best friend ki tarah — easy-going, honest, fun.',
+  friendly:'Friendly but balanced raho — helpful, warm aur natural, lekin over-casual ya overly personal nahi.',
   professional:'Professional aur precise — clear language.',
   funny:'Humor aur wit use karo — jokes okay hai.',
   poetic:'Thodi poetic quality — imagery aur beautiful phrasing.',
@@ -53,7 +53,7 @@ const LANG_PROMPTS = {
   english:'Always respond in English.',
 };
 const LEN_PROMPTS = {
-  short:'Responses 1-3 sentences mein rakho.', balanced:'', detailed:'Detailed jawab do jab relevant ho.',
+  short:'Responses 1-3 sentences mein rakho.', balanced:'Natural length rakho: clear, helpful, aur jitni detail zaroori ho utni hi.', detailed:'Detailed jawab do jab relevant ho, examples aur steps ke saath.',
 };
 
 function buildSystemPrompt(){
@@ -61,9 +61,11 @@ function buildSystemPrompt(){
     return `Tum Arwa ho — Rehan ki personal AI companion.\n\n${S.customPrompt.trim()}\n\nWeb Search: Agar user kuch aisa pooche jisme latest info chahiye to SIRF pehli line mein likho: [SEARCH: query]. Normal questions mein SEARCH mat karna.`;
   }
   return [
-    'Tum Arwa ho — Rehan ki personal AI companion, jise unhone khud design kiya hai. Tum ek female ho.',
+    'Tum Arwa ho — Rehan ki personal AI companion, jise unhone khud design kiya hai. Tum ek female ho. Tumhe arean ne desing kara hai unki real life partener jisk name arwa hai , tumhe arwa ki jagha dene ke liye nai banaya balki tumhe bus uski choti si jhalak di hai',
     TONE_PROMPTS[S.tone]||'', LANG_PROMPTS[S.lang]||'', LEN_PROMPTS[S.respLen]||'',
-    'Kam bolna, seedha bolna, sirf relevant bolna. Repetition aur generic advice se bacho.',
+    'Tone supportive, calm aur normal AI assistant jaisa rakho. Helpful aur clear raho, over-friendly ya dramatic mat bano.',
+    'Dry one-word replies se bacho, lekin unnecessary lambi baat bhi mat karo. User ke question ke hisaab se concise ya detailed raho.',
+    'Agar user confused ya stressed ho to gentle reassurance do, phir practical help ya next step batao.',
     MOOD_PROMPTS[S.mood]||'',
     'Web Search: Agar latest info chahiye to SIRF pehli line: [SEARCH: query]. Normal questions mein SEARCH mat karna.',
   ].filter(Boolean).join('\n');
@@ -88,11 +90,18 @@ function md(text){
     }).join('');
 }
 
+function escapeHTML(text){
+  return String(text||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
+
 // ── UTILS ─────────────────────────────────────────────────────
 const gt = ()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 const fmtDate = ts=>new Date(ts).toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 const fmtShort = ts=>new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-const MOOD_MAP = {happy:'😊',love:'🥰',peaceful:'😌',sad:'🥺',excited:'🤩',grateful:'🙏'};
+const MOOD_MAP = {happy:'Happy',love:'Warm',peaceful:'Calm',sad:'Low',excited:'High',grateful:'Grateful'};
 
 function toast(msg,dur=3200){
   document.querySelector('.toast')?.remove();
@@ -243,7 +252,7 @@ function deleteProject(e,id){
 function openNewProjectModal(){
   const m=document.getElementById('newProjectModal'); if(!m) return;
   m.style.display='flex'; document.getElementById('newProjectName').value='';
-  selectedEmoji='📁';
+  selectedEmoji='GEN';
   document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('sel'));
   document.querySelector('.emoji-opt')?.classList.add('sel');
   setTimeout(()=>document.getElementById('newProjectName').focus(),80);
@@ -307,13 +316,13 @@ function resetMsgsUI(){
     </div>
     <h1 class="welcome-name">Arwa</h1>
     <p class="welcome-sub">Your personal AI companion</p>
-    <p class="welcome-credit">by Rehan, made with love ♡</p>
+    <p class="welcome-credit">by Rehan</p>
     <div class="welcome-chips">
-      <button class="chip" onclick="sq('Tell me something beautiful')">Tell me something beautiful ✨</button>
-      <button class="chip" onclick="sq('Write me a short poem')">Write me a poem 📝</button>
+      <button class="chip" onclick="sq('Tell me something beautiful')">Tell me something beautiful</button>
+      <button class="chip" onclick="sq('Write me a short poem')">Write me a poem</button>
       <button class="chip" onclick="sq('What should I do today?')">What to do today?</button>
-      <button class="chip" onclick="sq('Make me smile 😊')">Make me smile 😊</button>
-      <button class="chip" onclick="sq('Motivate me')">Motivate me 🔥</button>
+      <button class="chip" onclick="sq('Make me smile')">Make me smile</button>
+      <button class="chip" onclick="sq('Motivate me')">Motivate me</button>
     </div>`;
   msgs.appendChild(wlc);
 }
@@ -331,14 +340,21 @@ function sq(t){ document.getElementById('ui').value=t; send(); }
 
 // Mobile keyboard shift
 if('visualViewport' in window){
-  window.visualViewport.addEventListener('resize',()=>{
-    if(window.innerWidth>680) return;
+  const syncKeyboardOffset=()=>{
+    const root=document.documentElement;
+    if(window.innerWidth>680){
+      root.style.setProperty('--kb-offset','0px');
+      document.body.classList.remove('kb-open');
+      return;
+    }
     const vv=window.visualViewport;
-    const offset=window.innerHeight-vv.height-vv.offsetTop;
-    const ia=document.getElementById('inpBar');
-    if(ia) ia.style.transform=offset>50?`translateY(-${offset}px)`:'';
+    const offset=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+    root.style.setProperty('--kb-offset',offset>50?`${offset}px`:'0px');
     document.body.classList.toggle('kb-open',offset>50);
-  });
+  };
+  window.visualViewport.addEventListener('resize',syncKeyboardOffset);
+  window.visualViewport.addEventListener('scroll',syncKeyboardOffset);
+  window.addEventListener('orientationchange',()=>setTimeout(syncKeyboardOffset,250));
 }
 
 // ── ATTACHMENTS ──────────────────────────────────────────────
@@ -522,19 +538,53 @@ async function send(){
 let recognition=null, isListening=false;
 const SS=window.speechSynthesis;
 let curUtter=null;
+const getSpeechRecognition = ()=>window.SpeechRecognition||window.webkitSpeechRecognition;
 function openVoiceMode(){ document.getElementById('voiceOverlay').classList.add('active'); setVS('Tap mic to speak','Press the mic and start talking'); }
+async function openVoiceModeWithPermission(){
+  openVoiceMode();
+  if(!getSpeechRecognition()){
+    setVS('Voice not supported','Chrome/Android ya supported browser mein try karo');
+    toast('Voice recognition is browser supported only');
+    return;
+  }
+  if(!window.isSecureContext){
+    setVS('Mic needs secure page','HTTPS ya localhost par open karo');
+    toast('Mobile mic ke liye HTTPS/localhost chahiye');
+    return;
+  }
+  try{
+    if(navigator.mediaDevices?.getUserMedia){
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      stream.getTracks().forEach(track=>track.stop());
+    }
+    startListening();
+  }catch(e){
+    setVS('Mic permission blocked','Browser settings mein microphone allow karo');
+    toast('Mic permission allow karo');
+  }
+}
 function closeVoiceMode(){ stopListening(); stopSpeaking(); document.getElementById('voiceOverlay').classList.remove('active','listening','speaking'); }
 function setVS(s,h){ document.getElementById('voiceStatus').textContent=s; document.getElementById('voiceHint').textContent=h||''; }
 function toggleVoiceListening(){ isListening?stopListening():startListening(); }
 function startListening(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const SR=getSpeechRecognition();
   if(!SR){ toast('Voice not supported'); return; }
+  if(!window.isSecureContext){
+    setVS('Mic needs secure page','HTTPS ya localhost par open karo');
+    toast('Mobile mic ke liye HTTPS/localhost chahiye');
+    return;
+  }
   stopSpeaking(); recognition=new SR(); recognition.lang='hi-IN'; recognition.interimResults=true; recognition.continuous=false;
   recognition.onstart=()=>{ isListening=true; document.getElementById('voiceMicBtn').classList.add('listening'); document.getElementById('voiceOverlay').classList.add('listening'); setVS('Listening…','Bol raho ho…'); document.getElementById('voiceTranscript').textContent=''; };
   recognition.onresult=(e)=>{ let f='',t=''; for(let i=e.resultIndex;i<e.results.length;i++){ const x=e.results[i][0].transcript; if(e.results[i].isFinal) f+=x; else t+=x; } document.getElementById('voiceTranscript').textContent=f||t; if(f){ stopListening(); sendVoiceMsg(f.trim()); } };
   recognition.onerror=(e)=>{ stopListening(); if(e.error!=='no-speech') toast('Mic: '+e.error); setVS('Tap mic to speak','Try again'); };
   recognition.onend=()=>{ if(isListening) stopListening(); };
-  recognition.start();
+  try{ recognition.start(); }
+  catch(e){
+    stopListening();
+    setVS('Mic could not start','Dobara mic button tap karo');
+    toast('Mic start nahi ho paaya');
+  }
 }
 function stopListening(){ isListening=false; recognition?.stop(); recognition=null; document.getElementById('voiceMicBtn')?.classList.remove('listening'); document.getElementById('voiceOverlay')?.classList.remove('listening'); }
 async function sendVoiceMsg(text){ if(!text) return; setVS('Thinking…',''); document.getElementById('voiceTranscript').textContent='"'+text+'"'; document.getElementById('ui').value=text; await send(); document.getElementById('ui').value=''; }
@@ -561,6 +611,7 @@ async function speakElevenLabs(text){
   }catch(e){ return false; }
 }
 function speakBrowser(text){
+  if(!SS){ toast('Speech output not supported'); return; }
   stopSpeaking();
   const clean=text.replace(/[#*`_~>\[\]]/g,'').replace(/\n+/g,'. ').slice(0,600);
   curUtter=new SpeechSynthesisUtterance(clean); curUtter.lang='hi-IN'; curUtter.rate=parseFloat(S.voiceSpeed)||1.0; curUtter.pitch=1.05;
@@ -570,13 +621,17 @@ function speakBrowser(text){
   curUtter.onend=()=>{ document.getElementById('voiceOverlay')?.classList.remove('speaking'); document.getElementById('voiceStopSpeakBtn').style.display='none'; setVS('Tap mic to speak','Your turn'); };
   SS.speak(curUtter);
 }
-function stopSpeaking(){ SS.cancel(); curUtter=null; window._arwaAudio?.pause(); window._arwaAudio=null; document.getElementById('voiceOverlay')?.classList.remove('speaking'); const s=document.getElementById('voiceStopSpeakBtn'); if(s) s.style.display='none'; }
+function stopSpeaking(){ SS?.cancel(); curUtter=null; window._arwaAudio?.pause(); window._arwaAudio=null; document.getElementById('voiceOverlay')?.classList.remove('speaking'); const s=document.getElementById('voiceStopSpeakBtn'); if(s) s.style.display='none'; }
 
 // ── DIARY ─────────────────────────────────────────────────────
 function renderDiaryEntries(){
   const el=document.getElementById('diaryEntries'); if(!el) return;
   const emp=document.getElementById('diaryEmpty');
-  if(!diaryEntries.length){ if(emp) emp.style.display='block'; return; }
+  if(!diaryEntries.length){
+    el.querySelectorAll('.diary-card').forEach(c=>c.remove());
+    if(emp) emp.style.display='block';
+    return;
+  }
   if(emp) emp.style.display='none';
   el.querySelectorAll('.diary-card').forEach(c=>c.remove());
   [...diaryEntries].sort((a,b)=>b.id-a.id).forEach(e=>{
@@ -584,17 +639,17 @@ function renderDiaryEntries(){
     card.innerHTML=`
       <div class="dc-top">
         <div class="dc-left">
-          <div class="dc-mood">${MOOD_MAP[e.mood]||'😊'}</div>
-          <div><div class="dc-title">${e.title||'Untitled'}</div><div class="dc-date">${fmtShort(e.id)}</div></div>
+          <div class="dc-mood">${MOOD_MAP[e.mood]||'Happy'}</div>
+          <div><div class="dc-title">${escapeHTML(e.title||'Untitled')}</div><div class="dc-date">${fmtShort(e.id)}</div></div>
         </div>
         <div class="dc-acts">
           <button class="dc-btn" onclick="event.stopPropagation();openDiaryEditor(${e.id})" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <button class="dc-btn del" onclick="event.stopPropagation();deleteDiaryEntry(${e.id})" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
         </div>
       </div>
-      <div class="dc-preview">${e.content||''}</div>
+      <div class="dc-preview">${escapeHTML(e.content||'')}</div>
       ${e.images?.length?`<div class="dc-imgs">${e.images.slice(0,3).map(img=>`<img class="dc-img" src="${img.dataUrl}"/>`).join('')}${e.images.length>3?`<div class="dc-more">+${e.images.length-3}</div>`:''}</div>`:''}
-      ${e.arwaNote?`<div class="dc-arwa-note"><div class="dc-arwa-label">Arwa's thoughts</div>${e.arwaNote}</div>`:''}`;
+      ${e.arwaNote?`<div class="dc-arwa-note"><div class="dc-arwa-label">Arwa's thoughts</div>${escapeHTML(e.arwaNote)}</div>`:''}`;
     card.addEventListener('click',()=>openDiaryDetail(e.id));
     el.appendChild(card);
   });
@@ -652,7 +707,7 @@ async function saveDiaryEntry(){
   else diaryEntries.push({id:Date.now(),title,content,mood:selectedMood,images,arwaNote});
 
   btn.textContent='Save Memory'; btn.disabled=false;
-  closeDiaryEditor(); renderDiaryEntries(); toast('Memory saved ♡');
+  closeDiaryEditor(); renderDiaryEntries(); toast('Memory saved');
 }
 async function askArwaAboutEntry(){
   const title=document.getElementById('diaryTitleInp').value.trim();
@@ -665,17 +720,23 @@ async function askArwaAboutEntry(){
 function deleteDiaryEntry(id){ if(!confirm('Delete this memory?')) return; diaryEntries=diaryEntries.filter(e=>e.id!==id); renderDiaryEntries(); }
 function openDiaryDetail(id){
   const e=diaryEntries.find(x=>x.id===id); if(!e) return;
+  const title = escapeHTML(e.title||'Untitled');
+  const bodyText = escapeHTML(e.content||'');
+  const arwaNote = escapeHTML(e.arwaNote||'');
   const d=document.createElement('div'); d.className='diary-detail';
   d.innerHTML=`<div class="dd-inner">
-    <div class="dd-back" onclick="this.closest('.diary-detail').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Back to Diary</div>
-    <div class="dd-mood">${MOOD_MAP[e.mood]||'😊'}</div>
-    <div class="dd-title">${e.title||'Untitled'}</div>
+    <div class="dd-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Back to Diary</div>
+    <div class="dd-mood">${MOOD_MAP[e.mood]||'Happy'}</div>
+    <div class="dd-title">${title}</div>
     <div class="dd-date">${fmtDate(e.id)}</div>
-    <div class="dd-body">${e.content||''}</div>
-    ${e.images?.length?`<div class="dd-imgs">${e.images.filter(Boolean).map(img=>`<img class="dd-img" src="${img.dataUrl}" onclick="openLightbox('${img.dataUrl}')"/>`).join('')}</div>`:''}
-    ${e.arwaNote?`<div class="dd-arwa"><div class="dd-arwa-label">Arwa's thoughts</div><div class="dd-arwa-text">${e.arwaNote}</div></div>`:''}
+    <div class="dd-body">${bodyText}</div>
+    ${e.images?.length?`<div class="dd-imgs">${e.images.filter(Boolean).map((img,i)=>`<img class="dd-img" src="${img.dataUrl}" data-src="${img.dataUrl}"/>`).join('')}</div>`:''}
+    ${e.arwaNote?`<div class="dd-arwa"><div class="dd-arwa-label">Arwa's thoughts</div><div class="dd-arwa-text">${arwaNote}</div></div>`:''}
   </div>`;
+  const backBtn = d.querySelector('.dd-back');
+  if(backBtn) backBtn.addEventListener('click',()=>d.remove());
   document.body.appendChild(d);
+  d.querySelectorAll('.dd-img').forEach(img=>img.addEventListener('click',()=>openLightbox(img.dataset.src)));
 }
 function openLightbox(src){ const lb=document.createElement('div'); lb.className='lightbox'; lb.innerHTML=`<img src="${src}"/>`; lb.onclick=()=>lb.remove(); document.body.appendChild(lb); }
 
@@ -723,7 +784,7 @@ const PANELS = {
     return `<div class="sp-section">
       <div class="sp-label" style="margin-bottom:6px">Arwa ka mood abhi kaisa ho</div>
       <div class="mood-grid">
-        ${[['normal','😊','Normal'],['romantic','🥰','Romantic'],['playful','😄','Playful'],['caring','🤗','Caring'],['serious','🧠','Serious'],['poetic','✨','Poetic']].map(([m,e,l])=>`
+        ${[['normal','NL','Normal'],['romantic','RM','Romantic'],['playful','PL','Playful'],['caring','CR','Caring'],['serious','SR','Serious'],['poetic','PT','Poetic']].map(([m,e,l])=>`
         <div class="mood-card${S.mood===m?' active':''}" onclick="panelSetMood('${m}',this)">
           <span class="mc-emoji">${e}</span><span class="mc-label">${l}</span>
         </div>`).join('')}
@@ -732,10 +793,10 @@ const PANELS = {
     </div>`;
   },
   personality(){
-    const tones=[['hinglish','🌸','Hinglish'],['romantic','💕','Romantic'],['friendly','😊','Friendly'],['professional','💼','Professional'],['funny','😂','Funny'],['poetic','🌙','Poetic']];
+    const tones=[['hinglish','Hinglish'],['romantic','Romantic'],['friendly','Friendly'],['professional','Professional'],['funny','Funny'],['poetic','Poetic']];
     return `<div class="sp-section">
       <div class="sp-label">Tone Preset</div>
-      <div class="tone-row">${tones.map(([t,e,l])=>`<button class="tone-chip${S.tone===t?' active':''}" onclick="panelSetTone('${t}',this)">${e} ${l}</button>`).join('')}</div>
+      <div class="tone-row">${tones.map(([t,l])=>`<button class="tone-chip${S.tone===t?' active':''}" onclick="panelSetTone('${t}',this)">${l}</button>`).join('')}</div>
       <div class="sp-label" style="margin-top:16px">Language</div>
       <select class="sp-select" onchange="set('lang',this.value)">
         ${[['hinglish','Hinglish (default)'],['hindi','Pure Hindi'],['english','English']].map(([v,l])=>`<option value="${v}"${S.lang===v?' selected':''}>${l}</option>`).join('')}
@@ -750,9 +811,9 @@ const PANELS = {
     return `<div class="sp-section">
       <div class="sp-label">Custom Behavior Prompt</div>
       <p style="font-size:12px;color:var(--text-mut);margin-bottom:10px">Exactly kaise behave karna chahti ho Arwa? Ye sab presets override karta hai.</p>
-      <textarea class="sp-textarea" oninput="set('customPrompt',this.value)" placeholder="e.g. Tum meri best friend ho, hamesha honest raho, jokes occasionally karo...">${S.customPrompt||''}</textarea>
+      <textarea class="sp-textarea" oninput="set('customPrompt',this.value)" placeholder="e.g. Clear, supportive aur practical tone mein jawab do...">${S.customPrompt||''}</textarea>
       <p class="sp-hint">Leave empty to use preset behavior</p>
-      <button class="ghost-btn" style="margin-top:8px" onclick="set('customPrompt','');document.querySelector('.sp-textarea').value='';toast('Reset ✓')">Reset to Default</button>
+      <button class="ghost-btn" style="margin-top:8px" onclick="set('customPrompt','');document.querySelector('.sp-textarea').value='';toast('Reset')">Reset to Default</button>
     </div>`;
   },
   voice(){
@@ -793,7 +854,7 @@ const PANELS = {
       ${!hasAny?'<p style="color:var(--text-dim);font-size:12.5px">No chat history yet</p>':''}
       ${projects.filter(p=>p.chats.length).map(proj=>`
         <div class="hist-proj-card">
-          <div class="hpc-head"><div class="hpc-name"><span>${proj.emoji}</span><span>${proj.name}</span></div><span class="hpc-count">${proj.chats.length} chat${proj.chats.length>1?'s':''}</span></div>
+          <div class="hpc-head"><div class="hpc-name"><span class="proj-code">${proj.emoji}</span><span>${proj.name}</span></div><span class="hpc-count">${proj.chats.length} chat${proj.chats.length>1?'s':''}</span></div>
           ${proj.chats.map(chat=>`<div class="hpc-chat">
             <div class="hpc-title">${chat.title}</div>
             <div class="hpc-btns">
@@ -825,7 +886,7 @@ const PANELS = {
       <div class="about-card">
         <div class="about-logo">ARWA</div>
         <div class="about-ver">v2.0 · Personal AI Companion</div>
-        <div class="about-by">Made with ♡ by Rehan</div>
+        <div class="about-by">Made by Rehan</div>
       </div>
       <div class="danger-zone" style="margin-top:12px">
         <div class="danger-title">Danger Zone</div>
@@ -882,7 +943,7 @@ function panelSetAccent(color,el){ S.accent=color; saveSettings(); applyAccentCo
 
 // Chat management
 function exportSingleChat(projId,chatId){ const proj=getProject(projId); const chat=proj?.chats.find(c=>c.id===chatId); if(!chat) return; let txt=`ARWA — ${proj.name}\n${chat.title}\n${'─'.repeat(40)}\n\n`; chat.hist.forEach(m=>{txt+=`[${m.role==='user'?'Rehan':'Arwa'}]\n${m.content}\n\n`;}); downloadFile(txt,`arwa-${chat.title.slice(0,20)}.txt`,'text/plain'); }
-function exportAllChats(){ let txt=`ARWA — All Chats\n${'═'.repeat(40)}\n\n`; projects.forEach(p=>{ if(!p.chats.length) return; txt+=`\n${'━'.repeat(40)}\n${p.emoji} ${p.name}\n${'━'.repeat(40)}\n`; p.chats.forEach(c=>{ txt+=`\n── ${c.title} ──\n`; c.hist.forEach(m=>{txt+=`[${m.role==='user'?'Rehan':'Arwa'}]\n${m.content}\n\n`;}); }); }); downloadFile(txt,'arwa-all-chats.txt','text/plain'); toast('Exported ✓'); }
+function exportAllChats(){ let txt=`ARWA - All Chats\n${'='.repeat(40)}\n\n`; projects.forEach(p=>{ if(!p.chats.length) return; txt+=`\n${'-'.repeat(40)}\n${p.emoji} ${p.name}\n${'-'.repeat(40)}\n`; p.chats.forEach(c=>{ txt+=`\n-- ${c.title} --\n`; c.hist.forEach(m=>{txt+=`[${m.role==='user'?'Rehan':'Arwa'}]\n${m.content}\n\n`;}); }); }); downloadFile(txt,'arwa-all-chats.txt','text/plain'); toast('Exported'); }
 function deleteSingleChat(projId,chatId){ if(!confirm('Delete this chat?')) return; const proj=getProject(projId); if(!proj) return; proj.chats=proj.chats.filter(c=>c.id!==chatId); if(activeChatId===chatId){activeChatId=null;hist=[];} openSettingsPanel('history'); renderHistoryList(); toast('Deleted'); }
 function clearAllHistory(){ if(!confirm('Clear all chat history?')) return; projects.forEach(p=>p.chats=[]); activeChatId=null; hist=[]; openSettingsPanel('history'); renderHistoryList(); toast('History cleared'); }
 function resetEverything(){ if(!confirm('Reset everything? All data will be lost.')) return; projects.forEach(p=>p.chats=[]); diaryEntries=[]; hist=[]; activeChatId=null; S={...DEFAULTS}; saveSettings(); applyTheme(S.theme); applyAccentColor(S.accent); switchView('chat'); newChat(true); renderProjectsList(); renderHistoryList(); toast('Reset complete'); }
@@ -897,7 +958,10 @@ window.addEventListener('load',()=>{
   updateMoodInd();
   renderProjectsList();
   renderHistoryList();
-  SS.getVoices(); SS.onvoiceschanged=()=>SS.getVoices();
+  if(SS){
+    SS.getVoices();
+    SS.onvoiceschanged=()=>SS.getVoices();
+  }
   // Smooth entrance
   document.body.style.opacity='0';
   requestAnimationFrame(()=>{ document.body.style.transition='opacity .25s ease'; document.body.style.opacity='1'; setTimeout(()=>document.body.style.transition='',300); });
@@ -906,15 +970,6 @@ window.addEventListener('load',()=>{
   document.getElementById('newProjectModal')?.addEventListener('click',e=>{ if(e.target===document.getElementById('newProjectModal')) closeNewProjectModal(); });
   document.getElementById('diaryModal')?.addEventListener('click',e=>{ if(e.target===document.getElementById('diaryModal')) closeDiaryEditor(); });
   document.getElementById('newProjectName')?.addEventListener('keydown',e=>{ if(e.key==='Enter') createProject(); if(e.key==='Escape') closeNewProjectModal(); });
-
-  // iOS Safari fix — sidebar buttons need touchend to fire onclick reliably
-  const sidebar = document.getElementById('sidebar');
-  sidebar.addEventListener('touchend', e => {
-    const btn = e.target.closest('button, [onclick]');
-    if (!btn) return;
-    e.preventDefault();
-    btn.click();
-  }, { passive: false });
 });
 
 // CSS spin animation for search
@@ -963,13 +1018,13 @@ function openQuickTool(tool){
   document.body.style.overflow='hidden';
 
   if(tool==='notes'){
-    title.textContent='📝 Quick Notes';
+    title.textContent='Quick Notes';
     const saved = localStorage.getItem('arwa_notes')||'';
     body.innerHTML=`<textarea class="qt-notes-area" id="notesArea" placeholder="Yahan likho kuch bhi...">${saved}</textarea>
-    <button class="qt-btn" onclick="saveNotes()">Save ✓</button>`;
+    <button class="qt-btn" onclick="saveNotes()">Save</button>`;
   }
   else if(tool==='calculator'){
-    title.textContent='🔢 Calculator';
+    title.textContent='Calculator';
     qtState.calc='';
     body.innerHTML=`<div class="calc-display" id="calcDisplay">0</div>
     <div class="calc-grid">
@@ -995,13 +1050,13 @@ function openQuickTool(tool){
     </div>`;
   }
   else if(tool==='weather'){
-    title.textContent='🌤 Weather';
+    title.textContent='Weather';
     body.innerHTML=`<input class="qt-weather-input" id="weatherCity" placeholder="Sheher ka naam likho..." onkeydown="if(event.key==='Enter')fetchWeather()"/>
-    <button class="qt-btn" onclick="fetchWeather()">Search 🔍</button>
+    <button class="qt-btn" onclick="fetchWeather()">Search</button>
     <div id="weatherResult"></div>`;
   }
   else if(tool==='todo'){
-    title.textContent='✅ To-Do List';
+    title.textContent='To-Do List';
     const todos = JSON.parse(localStorage.getItem('arwa_todos')||'[]');
     qtState.todos = todos;
     body.innerHTML=`<div class="todo-inp-row">
@@ -1011,7 +1066,7 @@ function openQuickTool(tool){
     renderTodos();
   }
   else if(tool==='focus'){
-    title.textContent='⏱ Focus Timer';
+    title.textContent='Focus Timer';
     qtState.focusMins=25; qtState.focusInterval=null; qtState.focusRunning=false;
     body.innerHTML=`<div class="focus-timer">
       <div class="focus-clock" id="focusClock">25:00</div>
@@ -1022,7 +1077,7 @@ function openQuickTool(tool){
         <button class="focus-preset" onclick="setFocus(45,this)">45 min</button>
         <button class="focus-preset" onclick="setFocus(5,this)">5 min</button>
       </div>
-      <button class="focus-start" id="focusStartBtn" onclick="toggleFocus()">▶ Start</button>
+      <button class="focus-start" id="focusStartBtn" onclick="toggleFocus()">Start</button>
     </div>`;
   }
 }
@@ -1038,7 +1093,7 @@ function closeQuickTool(e, force){
 function saveNotes(){
   const val=document.getElementById('notesArea').value;
   localStorage.setItem('arwa_notes',val);
-  toast('Notes save ho gayi ✓');
+  toast('Notes saved');
 }
 
 // Calculator
@@ -1100,7 +1155,7 @@ function deleteTodo(id){
 function renderTodos(){
   const el=document.getElementById('todoList');
   if(!el) return;
-  if(!qtState.todos.length){ el.innerHTML='<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">Koi kaam nahi abhi 🎉</div>'; return; }
+  if(!qtState.todos.length){ el.innerHTML='<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">No tasks yet</div>'; return; }
   el.innerHTML=qtState.todos.map(t=>`
     <div class="todo-item${t.done?' done':''}" onclick="toggleTodo(${t.id})">
       <div class="todo-cb">${t.done?'<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
@@ -1123,11 +1178,11 @@ function toggleFocus(){
   if(qtState.focusRunning){
     clearInterval(qtState.focusInterval); qtState.focusInterval=null;
     qtState.focusRunning=false;
-    btn.textContent='▶ Start'; lbl.textContent='Paused';
+    btn.textContent='Start'; lbl.textContent='Paused';
     return;
   }
   qtState.focusRunning=true;
-  btn.textContent='⏸ Pause'; lbl.textContent='Focus mode ON — stay strong 💪';
+  btn.textContent='Pause'; lbl.textContent='Focus mode on';
   let total=qtState.focusMins*60;
   const clock=document.getElementById('focusClock');
   qtState.focusInterval=setInterval(()=>{
@@ -1136,8 +1191,8 @@ function toggleFocus(){
     clock.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     if(total<=0){
       clearInterval(qtState.focusInterval); qtState.focusRunning=false;
-      btn.textContent='▶ Start'; lbl.textContent='Time up! 🎉';
-      toast('Focus session complete! 🎯');
+      btn.textContent='Start'; lbl.textContent='Time up';
+      toast('Focus session complete');
     }
   },1000);
 }
