@@ -906,6 +906,15 @@ window.addEventListener('load',()=>{
   document.getElementById('newProjectModal')?.addEventListener('click',e=>{ if(e.target===document.getElementById('newProjectModal')) closeNewProjectModal(); });
   document.getElementById('diaryModal')?.addEventListener('click',e=>{ if(e.target===document.getElementById('diaryModal')) closeDiaryEditor(); });
   document.getElementById('newProjectName')?.addEventListener('keydown',e=>{ if(e.key==='Enter') createProject(); if(e.key==='Escape') closeNewProjectModal(); });
+
+  // iOS Safari fix — sidebar buttons need touchend to fire onclick reliably
+  const sidebar = document.getElementById('sidebar');
+  sidebar.addEventListener('touchend', e => {
+    const btn = e.target.closest('button, [onclick]');
+    if (!btn) return;
+    e.preventDefault();
+    btn.click();
+  }, { passive: false });
 });
 
 // CSS spin animation for search
@@ -913,29 +922,222 @@ const styleTag=document.createElement('style');
 styleTag.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
 document.head.appendChild(styleTag);
 
-// ── SWIPE GESTURE — sidebar ───────────────────────────────────
-(function(){
-  const EDGE = 28;      // px from left edge to trigger open swipe
-  const MIN_DIST = 55;  // min horizontal swipe distance
-  const MAX_VERT = 70;  // max vertical drift (to avoid conflict with scroll)
-  let t0x=0, t0y=0, tracking=false;
+// ══════════════════════════════════════════════════════
+//  ATTACH POPUP
+// ══════════════════════════════════════════════════════
+function toggleAttachPopup(e){
+  e.stopPropagation();
+  const popup = document.getElementById('attachPopup');
+  const btn   = document.getElementById('plusBtn');
+  const isOpen = popup.classList.contains('open');
+  popup.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  if(!isOpen){
+    setTimeout(()=> document.addEventListener('click', closeAttachPopupOutside, {once:true}), 0);
+  }
+}
+function closeAttachPopupOutside(){ closeAttachPopup(); }
+function closeAttachPopup(){
+  document.getElementById('attachPopup').classList.remove('open');
+  document.getElementById('plusBtn').classList.remove('open');
+}
+function triggerFileInput(accept){
+  const el = document.getElementById('fileInputTyped');
+  el.accept = accept; el.value=''; el.click();
+}
+function triggerCamera(){
+  document.getElementById('cameraInput').value='';
+  document.getElementById('cameraInput').click();
+}
 
-  document.addEventListener('touchstart', e=>{
-    if(window.innerWidth > 680) return;
-    const t = e.touches[0];
-    t0x = t.clientX; t0y = t.clientY; tracking = false;
-    // Start tracking: either from left edge (open) or when sidebar is open (close anywhere)
-    if(t0x <= EDGE || sidebarVisible) tracking = true;
-  }, {passive:true});
+// ══════════════════════════════════════════════════════
+//  QUICK TOOLS
+// ══════════════════════════════════════════════════════
+let qtState = {};
 
-  document.addEventListener('touchend', e=>{
-    if(!tracking || window.innerWidth > 680) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - t0x;
-    const dy = Math.abs(t.clientY - t0y);
-    tracking = false;
-    if(dy > MAX_VERT) return; // too vertical — user was scrolling
-    if(dx > MIN_DIST && !sidebarVisible)  openSidebar();   // swipe right → open
-    if(dx < -MIN_DIST && sidebarVisible)  closeSidebar();  // swipe left  → close
-  }, {passive:true});
-})();
+function openQuickTool(tool){
+  const modal = document.getElementById('quickToolModal');
+  const title = document.getElementById('qtTitle');
+  const body  = document.getElementById('qtBody');
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+
+  if(tool==='notes'){
+    title.textContent='📝 Quick Notes';
+    const saved = localStorage.getItem('arwa_notes')||'';
+    body.innerHTML=`<textarea class="qt-notes-area" id="notesArea" placeholder="Yahan likho kuch bhi...">${saved}</textarea>
+    <button class="qt-btn" onclick="saveNotes()">Save ✓</button>`;
+  }
+  else if(tool==='calculator'){
+    title.textContent='🔢 Calculator';
+    qtState.calc='';
+    body.innerHTML=`<div class="calc-display" id="calcDisplay">0</div>
+    <div class="calc-grid">
+      <button class="calc-btn clr" onclick="calcInput('C')">C</button>
+      <button class="calc-btn op"  onclick="calcInput('(')">(</button>
+      <button class="calc-btn op"  onclick="calcInput(')')">)</button>
+      <button class="calc-btn op"  onclick="calcInput('/')">÷</button>
+      <button class="calc-btn"     onclick="calcInput('7')">7</button>
+      <button class="calc-btn"     onclick="calcInput('8')">8</button>
+      <button class="calc-btn"     onclick="calcInput('9')">9</button>
+      <button class="calc-btn op"  onclick="calcInput('*')">×</button>
+      <button class="calc-btn"     onclick="calcInput('4')">4</button>
+      <button class="calc-btn"     onclick="calcInput('5')">5</button>
+      <button class="calc-btn"     onclick="calcInput('6')">6</button>
+      <button class="calc-btn op"  onclick="calcInput('-')">−</button>
+      <button class="calc-btn"     onclick="calcInput('1')">1</button>
+      <button class="calc-btn"     onclick="calcInput('2')">2</button>
+      <button class="calc-btn"     onclick="calcInput('3')">3</button>
+      <button class="calc-btn op"  onclick="calcInput('+')">+</button>
+      <button class="calc-btn span2" onclick="calcInput('0')">0</button>
+      <button class="calc-btn"     onclick="calcInput('.')">.</button>
+      <button class="calc-btn eq"  onclick="calcInput('=')">=</button>
+    </div>`;
+  }
+  else if(tool==='weather'){
+    title.textContent='🌤 Weather';
+    body.innerHTML=`<input class="qt-weather-input" id="weatherCity" placeholder="Sheher ka naam likho..." onkeydown="if(event.key==='Enter')fetchWeather()"/>
+    <button class="qt-btn" onclick="fetchWeather()">Search 🔍</button>
+    <div id="weatherResult"></div>`;
+  }
+  else if(tool==='todo'){
+    title.textContent='✅ To-Do List';
+    const todos = JSON.parse(localStorage.getItem('arwa_todos')||'[]');
+    qtState.todos = todos;
+    body.innerHTML=`<div class="todo-inp-row">
+      <input class="todo-inp" id="todoInp" placeholder="Kya karna hai..." onkeydown="if(event.key==='Enter')addTodo()"/>
+      <button class="qt-btn" onclick="addTodo()" style="margin:0;padding:9px 14px">+</button>
+    </div><div class="todo-list" id="todoList"></div>`;
+    renderTodos();
+  }
+  else if(tool==='focus'){
+    title.textContent='⏱ Focus Timer';
+    qtState.focusMins=25; qtState.focusInterval=null; qtState.focusRunning=false;
+    body.innerHTML=`<div class="focus-timer">
+      <div class="focus-clock" id="focusClock">25:00</div>
+      <div class="focus-label" id="focusLabel">Choose duration and start</div>
+      <div class="focus-btns">
+        <button class="focus-preset active" onclick="setFocus(25,this)">25 min</button>
+        <button class="focus-preset" onclick="setFocus(15,this)">15 min</button>
+        <button class="focus-preset" onclick="setFocus(45,this)">45 min</button>
+        <button class="focus-preset" onclick="setFocus(5,this)">5 min</button>
+      </div>
+      <button class="focus-start" id="focusStartBtn" onclick="toggleFocus()">▶ Start</button>
+    </div>`;
+  }
+}
+
+function closeQuickTool(e, force){
+  if(!force && e && e.target!==document.getElementById('quickToolModal')) return;
+  document.getElementById('quickToolModal').style.display='none';
+  document.body.style.overflow='';
+  if(qtState.focusInterval){ clearInterval(qtState.focusInterval); qtState.focusInterval=null; }
+}
+
+// Notes
+function saveNotes(){
+  const val=document.getElementById('notesArea').value;
+  localStorage.setItem('arwa_notes',val);
+  toast('Notes save ho gayi ✓');
+}
+
+// Calculator
+function calcInput(val){
+  const d=document.getElementById('calcDisplay');
+  if(val==='C'){ qtState.calc=''; d.textContent='0'; return; }
+  if(val==='='){
+    try{
+      const res=Function('"use strict";return('+qtState.calc.replace(/×/g,'*').replace(/÷/g,'/')+')')();
+      qtState.calc=String(res); d.textContent=qtState.calc;
+    }catch(e){ d.textContent='Error'; qtState.calc=''; }
+    return;
+  }
+  qtState.calc+=val;
+  d.textContent=qtState.calc;
+}
+
+// Weather
+async function fetchWeather(){
+  const city=document.getElementById('weatherCity').value.trim();
+  if(!city) return;
+  const res=document.getElementById('weatherResult');
+  res.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-dim)">Loading...</div>';
+  try{
+    const r=await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+    const d=await r.json();
+    const cur=d.current_condition[0];
+    const temp=cur.temp_C; const desc=cur.weatherDesc[0].value;
+    const feel=cur.FeelsLikeC; const hum=cur.humidity;
+    res.innerHTML=`<div class="qt-weather-result">
+      <div class="qt-weather-temp">${temp}°C</div>
+      <div class="qt-weather-desc">${desc}</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:8px">Feels like ${feel}°C · Humidity ${hum}%</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px">${city}</div>
+    </div>`;
+  }catch(e){
+    res.innerHTML='<div style="color:#f87171;margin-top:10px">City nahi mila. Dobara try karo.</div>';
+  }
+}
+
+// To-Do
+function addTodo(){
+  const inp=document.getElementById('todoInp');
+  const text=inp.value.trim(); if(!text) return;
+  qtState.todos.unshift({text,done:false,id:Date.now()});
+  localStorage.setItem('arwa_todos',JSON.stringify(qtState.todos));
+  inp.value=''; renderTodos();
+}
+function toggleTodo(id){
+  qtState.todos=qtState.todos.map(t=>t.id===id?{...t,done:!t.done}:t);
+  localStorage.setItem('arwa_todos',JSON.stringify(qtState.todos));
+  renderTodos();
+}
+function deleteTodo(id){
+  qtState.todos=qtState.todos.filter(t=>t.id!==id);
+  localStorage.setItem('arwa_todos',JSON.stringify(qtState.todos));
+  renderTodos();
+}
+function renderTodos(){
+  const el=document.getElementById('todoList');
+  if(!el) return;
+  if(!qtState.todos.length){ el.innerHTML='<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">Koi kaam nahi abhi 🎉</div>'; return; }
+  el.innerHTML=qtState.todos.map(t=>`
+    <div class="todo-item${t.done?' done':''}" onclick="toggleTodo(${t.id})">
+      <div class="todo-cb">${t.done?'<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+      <span>${t.text}</span>
+      <span class="todo-del" onclick="event.stopPropagation();deleteTodo(${t.id})">✕</span>
+    </div>`).join('');
+}
+
+// Focus Timer
+function setFocus(mins, btn){
+  qtState.focusMins=mins;
+  if(qtState.focusRunning) return;
+  document.querySelectorAll('.focus-preset').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('focusClock').textContent=`${String(mins).padStart(2,'0')}:00`;
+}
+function toggleFocus(){
+  const btn=document.getElementById('focusStartBtn');
+  const lbl=document.getElementById('focusLabel');
+  if(qtState.focusRunning){
+    clearInterval(qtState.focusInterval); qtState.focusInterval=null;
+    qtState.focusRunning=false;
+    btn.textContent='▶ Start'; lbl.textContent='Paused';
+    return;
+  }
+  qtState.focusRunning=true;
+  btn.textContent='⏸ Pause'; lbl.textContent='Focus mode ON — stay strong 💪';
+  let total=qtState.focusMins*60;
+  const clock=document.getElementById('focusClock');
+  qtState.focusInterval=setInterval(()=>{
+    total--;
+    const m=Math.floor(total/60), s=total%60;
+    clock.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if(total<=0){
+      clearInterval(qtState.focusInterval); qtState.focusRunning=false;
+      btn.textContent='▶ Start'; lbl.textContent='Time up! 🎉';
+      toast('Focus session complete! 🎯');
+    }
+  },1000);
+}
